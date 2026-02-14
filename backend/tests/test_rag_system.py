@@ -7,10 +7,10 @@ from typing import List, Any
 
 from vector_store import SearchResults
 
-
 # ---------------------------------------------------------------------------
 # Mock Anthropic SDK objects (same as test_ai_generator)
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class MockTextBlock:
@@ -36,6 +36,7 @@ class MockResponse:
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _mock_config():
     cfg = MagicMock()
     cfg.CHUNK_SIZE = 800
@@ -53,6 +54,7 @@ def _mock_config():
 # Tests – tool registration
 # ---------------------------------------------------------------------------
 
+
 class TestToolRegistration:
 
     @patch("rag_system.AIGenerator")
@@ -61,6 +63,7 @@ class TestToolRegistration:
     @patch("rag_system.SessionManager")
     def test_both_tools_registered(self, _sm, _dp, _vs, _ai):
         from rag_system import RAGSystem
+
         rag = RAGSystem(_mock_config())
 
         names = list(rag.tool_manager.tools.keys())
@@ -73,6 +76,7 @@ class TestToolRegistration:
     @patch("rag_system.SessionManager")
     def test_tool_definitions_passed_to_generator(self, _sm, _dp, _vs, _ai):
         from rag_system import RAGSystem
+
         rag = RAGSystem(_mock_config())
         rag.ai_generator.generate_response.return_value = "resp"
 
@@ -87,6 +91,7 @@ class TestToolRegistration:
 # Tests – query plumbing
 # ---------------------------------------------------------------------------
 
+
 class TestQueryPlumbing:
 
     @patch("rag_system.AIGenerator")
@@ -95,6 +100,7 @@ class TestQueryPlumbing:
     @patch("rag_system.SessionManager")
     def test_query_wraps_user_question(self, _sm, _dp, _vs, _ai):
         from rag_system import RAGSystem
+
         rag = RAGSystem(_mock_config())
         rag.ai_generator.generate_response.return_value = "resp"
 
@@ -110,6 +116,7 @@ class TestQueryPlumbing:
     @patch("rag_system.SessionManager")
     def test_query_returns_tuple(self, _sm, _dp, _vs, _ai):
         from rag_system import RAGSystem
+
         rag = RAGSystem(_mock_config())
         rag.ai_generator.generate_response.return_value = "answer"
 
@@ -127,6 +134,7 @@ class TestQueryPlumbing:
     @patch("rag_system.SessionManager")
     def test_session_history_forwarded(self, _sm, _dp, _vs, _ai):
         from rag_system import RAGSystem
+
         rag = RAGSystem(_mock_config())
         rag.session_manager.get_conversation_history.return_value = "User: Hi"
         rag.ai_generator.generate_response.return_value = "resp"
@@ -142,6 +150,7 @@ class TestQueryPlumbing:
     @patch("rag_system.SessionManager")
     def test_no_session_sends_none_history(self, _sm, _dp, _vs, _ai):
         from rag_system import RAGSystem
+
         rag = RAGSystem(_mock_config())
         rag.ai_generator.generate_response.return_value = "resp"
 
@@ -155,6 +164,7 @@ class TestQueryPlumbing:
 # Tests – source lifecycle
 # ---------------------------------------------------------------------------
 
+
 class TestSourceLifecycle:
 
     @patch("rag_system.AIGenerator")
@@ -163,6 +173,7 @@ class TestSourceLifecycle:
     @patch("rag_system.SessionManager")
     def test_sources_returned_from_search_tool(self, _sm, _dp, _vs, _ai):
         from rag_system import RAGSystem
+
         rag = RAGSystem(_mock_config())
         rag.search_tool.last_sources = [
             {"text": "AI Course - Lesson 1", "link": "http://example.com"}
@@ -180,6 +191,7 @@ class TestSourceLifecycle:
     @patch("rag_system.SessionManager")
     def test_sources_reset_after_query(self, _sm, _dp, _vs, _ai):
         from rag_system import RAGSystem
+
         rag = RAGSystem(_mock_config())
         rag.search_tool.last_sources = [{"text": "S", "link": None}]
         rag.ai_generator.generate_response.return_value = "answer"
@@ -194,6 +206,7 @@ class TestSourceLifecycle:
     @patch("rag_system.SessionManager")
     def test_empty_sources_when_no_tool_called(self, _sm, _dp, _vs, _ai):
         from rag_system import RAGSystem
+
         rag = RAGSystem(_mock_config())
         rag.ai_generator.generate_response.return_value = "general answer"
 
@@ -206,6 +219,7 @@ class TestSourceLifecycle:
 # Tests – error propagation
 # ---------------------------------------------------------------------------
 
+
 class TestErrorPropagation:
 
     @patch("rag_system.AIGenerator")
@@ -214,6 +228,7 @@ class TestErrorPropagation:
     @patch("rag_system.SessionManager")
     def test_generator_exception_propagates(self, _sm, _dp, _vs, _ai):
         from rag_system import RAGSystem
+
         rag = RAGSystem(_mock_config())
         rag.ai_generator.generate_response.side_effect = Exception("API down")
 
@@ -225,6 +240,7 @@ class TestErrorPropagation:
 # Tests – end-to-end tool execution through the RAG system
 # ---------------------------------------------------------------------------
 
+
 class TestEndToEndToolExecution:
     """Simulate the full path: query → AI calls tool → tool hits store → answer."""
 
@@ -235,6 +251,7 @@ class TestEndToEndToolExecution:
     def test_search_tool_produces_valid_output(self, _sm, _dp, _vs, _ai):
         """Directly invoke the registered search tool through the manager."""
         from rag_system import RAGSystem
+
         rag = RAGSystem(_mock_config())
 
         # Wire the mock vector store to return results
@@ -260,10 +277,13 @@ class TestEndToEndToolExecution:
     def test_search_tool_error_returns_message_not_exception(self, _sm, _dp, _vs, _ai):
         """store.search returning an error should yield a message, not crash."""
         from rag_system import RAGSystem
+
         rag = RAGSystem(_mock_config())
 
         rag.vector_store.search.return_value = SearchResults(
-            documents=[], metadata=[], distances=[],
+            documents=[],
+            metadata=[],
+            distances=[],
             error="Search error: collection is empty",
         )
 
@@ -283,6 +303,7 @@ class TestEndToEndToolExecution:
         through tool_manager, then returns a final answer.
         """
         from rag_system import RAGSystem
+
         rag = RAGSystem(_mock_config())
 
         # Set up vector store mock
@@ -294,7 +315,9 @@ class TestEndToEndToolExecution:
         rag.vector_store.get_lesson_link.return_value = "https://example.com/mcp/1"
 
         # Make generate_response simulate the tool call internally
-        def fake_generate(query, conversation_history=None, tools=None, tool_manager=None):
+        def fake_generate(
+            query, conversation_history=None, tools=None, tool_manager=None
+        ):
             if tool_manager and tools:
                 tool_result = tool_manager.execute_tool(
                     "search_course_content", query="MCP"
@@ -323,11 +346,14 @@ class TestEndToEndToolExecution:
         should propagate up through rag.query() so the API returns 500.
         """
         from rag_system import RAGSystem
+
         rag = RAGSystem(_mock_config())
 
         rag.vector_store.search.side_effect = Exception("ChromaDB crashed")
 
-        def fake_generate(query, conversation_history=None, tools=None, tool_manager=None):
+        def fake_generate(
+            query, conversation_history=None, tools=None, tool_manager=None
+        ):
             if tool_manager:
                 return tool_manager.execute_tool("search_course_content", query="q")
             return "no tools"

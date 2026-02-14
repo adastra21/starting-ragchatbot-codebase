@@ -19,6 +19,19 @@ cd backend && uv run python <module>.py
 
 The web UI is at `http://localhost:8000`, API docs at `http://localhost:8000/docs`.
 
+### Code Quality
+
+```bash
+# Check formatting (fails if code is not formatted)
+./scripts/quality.sh
+
+# Auto-fix formatting
+./scripts/quality.sh --fix
+
+# Run black directly
+uv run black backend/ main.py
+```
+
 ## Architecture
 
 This is a RAG (Retrieval-Augmented Generation) chatbot that answers questions about course materials. It uses Claude with tool-calling to search a ChromaDB vector database, then synthesizes answers from retrieved content.

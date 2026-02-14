@@ -20,15 +20,16 @@ from vector_store import VectorStore, SearchResults
 from search_tools import CourseSearchTool, CourseOutlineTool, ToolManager
 from ai_generator import AIGenerator
 
-
 # ---------------------------------------------------------------------------
 # Mock Anthropic SDK objects
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class MockTextBlock:
     text: str = ""
     type: str = "text"
+
 
 @dataclass
 class MockToolUseBlock:
@@ -36,6 +37,7 @@ class MockToolUseBlock:
     input: dict = field(default_factory=dict)
     id: str = "tool_abc"
     type: str = "tool_use"
+
 
 @dataclass
 class MockResponse:
@@ -46,6 +48,7 @@ class MockResponse:
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(scope="module")
 def real_vector_store():
@@ -79,6 +82,7 @@ def tool_manager(search_tool, outline_tool):
 # 1. Real VectorStore tests
 # ---------------------------------------------------------------------------
 
+
 class TestRealVectorStore:
     """Verify the real ChromaDB data is accessible and searchable."""
 
@@ -111,7 +115,9 @@ class TestRealVectorStore:
         titles = real_vector_store.get_existing_course_titles()
         # Use a substring of the first course title
         first_title = titles[0]
-        short_name = first_title.split(":")[0] if ":" in first_title else first_title[:10]
+        short_name = (
+            first_title.split(":")[0] if ":" in first_title else first_title[:10]
+        )
 
         resolved = real_vector_store._resolve_course_name(short_name)
         assert resolved is not None, f"Could not resolve '{short_name}'"
@@ -137,6 +143,7 @@ class TestRealVectorStore:
 # 2. Real CourseSearchTool tests
 # ---------------------------------------------------------------------------
 
+
 class TestRealCourseSearchTool:
     """Run CourseSearchTool.execute() against real ChromaDB data."""
 
@@ -144,7 +151,9 @@ class TestRealCourseSearchTool:
         """A general query should return formatted content, not an error."""
         result = search_tool.execute(query="What is this course about?")
         assert isinstance(result, str)
-        assert "No relevant content found" not in result, "Expected results but got empty"
+        assert (
+            "No relevant content found" not in result
+        ), "Expected results but got empty"
         assert len(result) > 20, f"Result suspiciously short: {result!r}"
 
     def test_execute_specific_query(self, search_tool):
@@ -182,6 +191,7 @@ class TestRealCourseSearchTool:
 # 3. Real CourseOutlineTool tests (control — this path works)
 # ---------------------------------------------------------------------------
 
+
 class TestRealCourseOutlineTool:
     """Verify the outline tool works against real data (known working path)."""
 
@@ -197,6 +207,7 @@ class TestRealCourseOutlineTool:
 # 4. ToolManager routing with real tools
 # ---------------------------------------------------------------------------
 
+
 class TestRealToolManager:
     """Test that ToolManager correctly routes to real tool instances."""
 
@@ -209,9 +220,7 @@ class TestRealToolManager:
 
     def test_execute_outline_via_manager(self, tool_manager, real_vector_store):
         titles = real_vector_store.get_existing_course_titles()
-        result = tool_manager.execute_tool(
-            "get_course_outline", course_name=titles[0]
-        )
+        result = tool_manager.execute_tool("get_course_outline", course_name=titles[0])
         assert isinstance(result, str)
         assert "Course:" in result
 
@@ -219,6 +228,7 @@ class TestRealToolManager:
 # ---------------------------------------------------------------------------
 # 5. AIGenerator integration — mock only the Anthropic API
 # ---------------------------------------------------------------------------
+
 
 class TestAIGeneratorWithRealTools:
     """
@@ -280,6 +290,7 @@ class TestAIGeneratorWithRealTools:
 # ---------------------------------------------------------------------------
 # 6. FastAPI endpoint integration (mock Anthropic, use real everything else)
 # ---------------------------------------------------------------------------
+
 
 class TestQueryResponseModel:
     """

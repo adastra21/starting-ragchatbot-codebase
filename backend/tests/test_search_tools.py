@@ -19,7 +19,9 @@ class TestCourseSearchToolExecute:
     def test_execute_calls_store_search_with_query_only(self):
         """execute(query) should call store.search with correct args."""
         self.mock_store.search.return_value = SearchResults(
-            documents=["content"], metadata=[{"course_title": "C", "lesson_number": 1}], distances=[0.5]
+            documents=["content"],
+            metadata=[{"course_title": "C", "lesson_number": 1}],
+            distances=[0.5],
         )
         self.mock_store.get_lesson_link.return_value = None
         self.mock_store.get_course_link.return_value = None
@@ -33,7 +35,9 @@ class TestCourseSearchToolExecute:
     def test_execute_passes_course_name_filter(self):
         """execute(query, course_name) should forward course_name to store."""
         self.mock_store.search.return_value = SearchResults(
-            documents=["content"], metadata=[{"course_title": "MCP", "lesson_number": 2}], distances=[0.3]
+            documents=["content"],
+            metadata=[{"course_title": "MCP", "lesson_number": 2}],
+            distances=[0.3],
         )
         self.mock_store.get_lesson_link.return_value = None
         self.mock_store.get_course_link.return_value = None
@@ -47,7 +51,9 @@ class TestCourseSearchToolExecute:
     def test_execute_passes_lesson_number_filter(self):
         """execute(query, lesson_number) should forward lesson_number to store."""
         self.mock_store.search.return_value = SearchResults(
-            documents=["content"], metadata=[{"course_title": "C", "lesson_number": 3}], distances=[0.2]
+            documents=["content"],
+            metadata=[{"course_title": "C", "lesson_number": 3}],
+            distances=[0.2],
         )
         self.mock_store.get_lesson_link.return_value = None
         self.mock_store.get_course_link.return_value = None
@@ -61,7 +67,9 @@ class TestCourseSearchToolExecute:
     def test_execute_passes_all_filters(self):
         """execute(query, course_name, lesson_number) should forward both filters."""
         self.mock_store.search.return_value = SearchResults(
-            documents=["content"], metadata=[{"course_title": "MCP", "lesson_number": 5}], distances=[0.1]
+            documents=["content"],
+            metadata=[{"course_title": "MCP", "lesson_number": 5}],
+            distances=[0.1],
         )
         self.mock_store.get_lesson_link.return_value = None
         self.mock_store.get_course_link.return_value = None
@@ -152,8 +160,10 @@ class TestCourseSearchToolExecute:
     def test_execute_returns_error_message_from_store(self):
         """execute should relay the error message from SearchResults."""
         self.mock_store.search.return_value = SearchResults(
-            documents=[], metadata=[], distances=[],
-            error="No course found matching 'xyz'"
+            documents=[],
+            metadata=[],
+            distances=[],
+            error="No course found matching 'xyz'",
         )
 
         result = self.tool.execute(query="test", course_name="xyz")
@@ -296,7 +306,9 @@ class TestToolManager:
         mgr = ToolManager()
         mock_store = MagicMock()
         mock_store.search.return_value = SearchResults(
-            documents=["hit"], metadata=[{"course_title": "C", "lesson_number": 1}], distances=[0.1]
+            documents=["hit"],
+            metadata=[{"course_title": "C", "lesson_number": 1}],
+            distances=[0.1],
         )
         mock_store.get_lesson_link.return_value = None
         mock_store.get_course_link.return_value = None

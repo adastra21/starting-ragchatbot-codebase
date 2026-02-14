@@ -7,10 +7,10 @@ from typing import List, Any
 
 from ai_generator import AIGenerator
 
-
 # ---------------------------------------------------------------------------
 # Lightweight mock objects that mimic the Anthropic SDK response shapes
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class MockTextBlock:
@@ -36,6 +36,7 @@ class MockResponse:
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_generator() -> AIGenerator:
     """Create an AIGenerator with a mocked Anthropic client."""
     with patch("anthropic.Anthropic"):
@@ -46,20 +47,23 @@ def _make_generator() -> AIGenerator:
 
 def _search_tool_defs() -> list:
     """Minimal tool definition list matching search_course_content."""
-    return [{
-        "name": "search_course_content",
-        "description": "Search course materials",
-        "input_schema": {
-            "type": "object",
-            "properties": {"query": {"type": "string"}},
-            "required": ["query"],
-        },
-    }]
+    return [
+        {
+            "name": "search_course_content",
+            "description": "Search course materials",
+            "input_schema": {
+                "type": "object",
+                "properties": {"query": {"type": "string"}},
+                "required": ["query"],
+            },
+        }
+    ]
 
 
 # ---------------------------------------------------------------------------
 # Tests – direct (non-tool) responses
 # ---------------------------------------------------------------------------
+
 
 class TestDirectResponses:
     """When Claude does NOT call a tool."""
@@ -114,13 +118,19 @@ class TestDirectResponses:
 # Tests – tool-use responses  (the CourseSearchTool path)
 # ---------------------------------------------------------------------------
 
+
 class TestToolUseCalling:
     """When Claude decides to call search_course_content."""
 
-    def _simulate_tool_round_trip(self, gen, tool_input, tool_output,
-                                   final_text="Final answer",
-                                   tool_name="search_course_content",
-                                   tool_id="tool_abc123"):
+    def _simulate_tool_round_trip(
+        self,
+        gen,
+        tool_input,
+        tool_output,
+        final_text="Final answer",
+        tool_name="search_course_content",
+        tool_id="tool_abc123",
+    ):
         """
         Set up the mock client to:
           1st call → tool_use response
@@ -238,7 +248,9 @@ class TestToolUseCalling:
         """If the tool raises, the exception should bubble up."""
         gen = _make_generator()
         gen.client.messages.create.return_value = MockResponse(
-            content=[MockToolUseBlock(name="search_course_content", input={"query": "q"})],
+            content=[
+                MockToolUseBlock(name="search_course_content", input={"query": "q"})
+            ],
             stop_reason="tool_use",
         )
         mock_tm = MagicMock()
@@ -251,7 +263,9 @@ class TestToolUseCalling:
         """If the second API call fails, the error should propagate."""
         gen = _make_generator()
         tool_resp = MockResponse(
-            content=[MockToolUseBlock(name="search_course_content", input={"query": "q"})],
+            content=[
+                MockToolUseBlock(name="search_course_content", input={"query": "q"})
+            ],
             stop_reason="tool_use",
         )
         gen.client.messages.create.side_effect = [
