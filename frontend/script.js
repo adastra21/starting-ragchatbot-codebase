@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Event Listeners
 function setupEventListeners() {
+    // New chat button
+    document.getElementById('newChatButton').addEventListener('click', createNewSession);
+
     // Chat functionality
     sendButton.addEventListener('click', sendMessage);
     chatInput.addEventListener('keypress', (e) => {
@@ -122,10 +125,24 @@ function addMessage(content, type, sources = null, isWelcome = false) {
     let html = `<div class="message-content">${displayContent}</div>`;
     
     if (sources && sources.length > 0) {
+        const sorted = [...sources].sort((a, b) => {
+            const lessonA = parseInt((a.text.match(/Lesson (\d+)$/) || [, '-1'])[1]);
+            const lessonB = parseInt((b.text.match(/Lesson (\d+)$/) || [, '-1'])[1]);
+            if (lessonA !== lessonB) return lessonA - lessonB;
+            return a.text.localeCompare(b.text);
+        });
+        const sourceLinks = sorted.map(s => {
+            const text = escapeHtml(s.text);
+            if (s.link) {
+                return `<li><a href="${s.link}" target="_blank" rel="noopener noreferrer">${text}</a></li>`;
+            }
+            return `<li>${text}</li>`;
+        }).join('');
+
         html += `
             <details class="sources-collapsible">
                 <summary class="sources-header">Sources</summary>
-                <div class="sources-content">${sources.join(', ')}</div>
+                <ul class="sources-content">${sourceLinks}</ul>
             </details>
         `;
     }
