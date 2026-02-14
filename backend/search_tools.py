@@ -88,30 +88,104 @@ class CourseSearchTool(Tool):
     def _format_results(self, results: SearchResults) -> str:
         """Format search results with course and lesson context"""
         formatted = []
-        sources = []  # Track sources for the UI
-        
+        seen_sources = set()
+        sources = []
+
         for doc, meta in zip(results.documents, results.metadata):
             course_title = meta.get('course_title', 'unknown')
             lesson_num = meta.get('lesson_number')
-            
+
             # Build context header
             header = f"[{course_title}"
             if lesson_num is not None:
                 header += f" - Lesson {lesson_num}"
             header += "]"
-            
-            # Track source for the UI
-            source = course_title
+
+            # Build source text for the UI
+            source_text = course_title
             if lesson_num is not None:
-                source += f" - Lesson {lesson_num}"
-            sources.append(source)
-            
+                source_text += f" - Lesson {lesson_num}"
+
+            # Deduplicate sources
+            if source_text not in seen_sources:
+                seen_sources.add(source_text)
+                link = None
+                if lesson_num is not None:
+                    link = self.store.get_lesson_link(course_title, lesson_num)
+                if link is None:
+                    link = self.store.get_course_link(course_title)
+                sources.append({
+                    "text": source_text,
+                    "link": link,
+                    "_sort_key": (lesson_num if lesson_num is not None else -1, course_title)
+                })
+
             formatted.append(f"{header}\n{doc}")
-        
+
+        # Sort by course title, then lesson number
+        sources.sort(key=lambda s: s["_sort_key"])
+        for s in sources:
+            del s["_sort_key"]
+
         # Store sources for retrieval
         self.last_sources = sources
-        
+
         return "\n\n".join(formatted)
+
+class CourseOutlineTool(Tool):
+    """Tool for retrieving course outline (title, link, lesson list)"""
+
+    def __init__(self, vector_store: VectorStore):
+        self.store = vector_store
+        self.last_sources = []
+
+    def get_tool_definition(self) -> Dict[str, Any]:
+        return {
+            "name": "get_course_outline",
+            "description": "Get the complete outline of a course including its title, link, and list of all lessons. Use this for questions about what a course covers, its structure, syllabus, or lesson list.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "course_name": {
+                        "type": "string",
+                        "description": "Course title (partial matches work, e.g. 'MCP', 'Introduction')"
+                    }
+                },
+                "required": ["course_name"]
+            }
+        }
+
+    def execute(self, course_name: str) -> str:
+        # Resolve to exact course title
+        course_title = self.store._resolve_course_name(course_name)
+        if not course_title:
+            return f"No course found matching '{course_name}'."
+
+        # Fetch full metadata
+        metadata = self.store.get_course_metadata(course_title)
+        if not metadata:
+            return f"Could not retrieve metadata for '{course_title}'."
+
+        # Format outline
+        course_link = metadata.get('course_link', '')
+        lessons = metadata.get('lessons', [])
+
+        lines = [f"Course: {course_title}"]
+        if course_link:
+            lines.append(f"Link: {course_link}")
+        lines.append(f"Total lessons: {len(lessons)}")
+        lines.append("")
+        for lesson in lessons:
+            lines.append(f"Lesson {lesson['lesson_number']}: {lesson['lesson_title']}")
+
+        # Track source for UI
+        self.last_sources = [{
+            "text": course_title,
+            "link": course_link or None
+        }]
+
+        return "\n".join(lines)
+
 
 class ToolManager:
     """Manages available tools for the AI"""
