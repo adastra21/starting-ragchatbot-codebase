@@ -16,6 +16,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28.0",
     "pytest>=9.0.2",
     "black>=24.0",
 ]
@@ -23,3 +24,10 @@ dev = [
 [tool.black]
 line-length = 88
 target-version = ["py313"]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+pythonpath = ["backend"]
+markers = [
+    "integration: tests that require real ChromaDB data on disk",
+]
